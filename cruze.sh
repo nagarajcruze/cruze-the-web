@@ -1,9 +1,14 @@
 #!/bin/bash
 domain=$1
+dir=$2
 
 if [ -z "$1" ]; then
   echo "Domain requried! Ex: ./cruze.sh example.com"
   exit 1
+fi
+
+if [ -z "$2" ]; then
+  dir=$(date '+%Y-%m-%d')
 fi
 
 logo(){
@@ -16,8 +21,6 @@ echo $'\e[1;31m'"
                               The Web " $'\e[0m'
 }
 logo
-
-dir=$(date '+%Y-%m-%d')
 
 mkdir -p $dir
 

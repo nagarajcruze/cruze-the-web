@@ -65,12 +65,9 @@ gau --subs $domain | tee $dir/gau_urls.txt
 echo "waybackurls Scan Started"
 cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
 
-cat $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
+cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
 echo "totoal waybackurls counts"
 cat $dir/waybackurls.txt | wc -l
-
-# all unique urls
-cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/waybackurls.txt | sort -u | tee $dir/unique_urls.txt
 
 echo  "looking for vulnerable endpoints.............................."
 mkdir $dir/paramlist

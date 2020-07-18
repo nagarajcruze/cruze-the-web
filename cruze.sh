@@ -13,6 +13,13 @@ echo $'\e[1;31m'"
 logo
 
 
+if [ -z "$1" ] || [ -z "$2" ]
+  then
+    echo "No argument supplied"
+    echo "usage $0 example.com outputfile"
+    exit
+fi
+
 mkdir $domain
 
 echo "-------------------Assetfinder Started  -------------------------------------------"

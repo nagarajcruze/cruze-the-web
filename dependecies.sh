@@ -4,7 +4,7 @@ sudo apt install python2
 
 cd ~/Downloads && curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
-pip install -U contextlib2 PySocks pluginbase pathlib2 singledispatch zipp wafw00f dns tld requests
+pip install -U contextlib2 PySocks pluginbase pathlib2 singledispatch zipp wafw00f tld requests
 
 # # Go should be installed
 # go get -u github.com/tomnomnom/meg

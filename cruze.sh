@@ -40,7 +40,7 @@ rm $dir/subs.txt
 
 
 echo "Now aquatone will start to screenshot and some extra recons."
-cat $dir/subdomains.txt | aquatone -chrome-path /usr/bin/brave -ports xlarge -out $dir/
+cat $dir/subdomains.txt | aquatone -chrome-path /snap/bin/chromium -ports xlarge -out $dir/
 
 echo "Total number of subdomains"
 cat  $dir/subdomains.txt | wc -l
@@ -60,12 +60,12 @@ rm $dir/nmap_live_ip.txt
 echo "Results of Nmap Host Status------------------------------------"
 
 echo "gau Scan Started..."
-gau --subs $domain | tee  $dir/gau_urls.txt
+gau --subs $domain | tee $dir/gau_urls.txt
 
 echo "waybackurls Scan Started"
 cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
 
-cat $dir/gau_urls.txt $dir/archiveurl.txt |  sort -u > $dir/waybackurls.txt
+cat $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
 echo "totoal waybackurls counts"
 cat $dir/waybackurls.txt | wc -l
 

@@ -69,6 +69,9 @@ cat $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
 echo "totoal waybackurls counts"
 cat $dir/waybackurls.txt | wc -l
 
+# all unique urls
+cat $dir/aquatone_urls.txt cat $dir/gau_urls.txt cat $dir/archiveurl.txt cat $dir/waybackurls.txt | sort -u | tee unique_urls.txt
+
 echo  "looking for vulnerable endpoints.............................."
 mkdir $dir/paramlist
 cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt 

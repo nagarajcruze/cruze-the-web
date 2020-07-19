@@ -84,7 +84,7 @@ echo "Gf patters Completed"
 
 wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
 
-python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o corsy.json
+python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
 
 
 echo  "---------------------------------------------------------------"

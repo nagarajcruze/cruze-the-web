@@ -24,7 +24,19 @@ echo $'\e[1;31m'"
 }
 logo
 
+<<<<<<< HEAD
 mkdir -p $dir
+=======
+
+if [ -z "$1" ] || [ -z "$2" ]
+  then
+    echo "No argument supplied"
+    echo "usage $0 example.com outputfile"
+    exit
+fi
+
+mkdir $domain
+>>>>>>> e3c0a3a8a93ca6b8a63e93e6f087b45a0ed20e5b
 
 echo "-------------------Assetfinder Started  -------------------------------------------"
 assetfinder --subs-only $domain | tee $dir/asset_subs.txt

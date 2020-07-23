@@ -20,7 +20,7 @@ if [ -z "$1" ]; then
 fi
 
 dir=$1-$(date '+%Y-%m-%d')
-dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/-/g | tr A-Z a-z)
+dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/_/g | tr A-Z a-z)
 mkdir -p $dir
 
 #Assetfinder

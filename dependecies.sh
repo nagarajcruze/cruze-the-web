@@ -81,6 +81,10 @@ echo "installing Arjun"
 git clone https://github.com/s0md3v/Arjun.git
 echo "done installing Arjun"
 
+echo "instaling subrute"
+go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
+sudo ln -s ~/go/bin/subfinder /usr/bin/
+
 echo "Don't forget to install gau"
 echo https://github.com/lc/gau/releases/
 echo tar xvf gau_1.0.2_linux_amd64.tar.gz
@@ -89,6 +93,7 @@ echo sudo ln -s ~/tools/gau /usr/bin
 
 echo "if you want download full seclists or download raft folder which is i use mostly."
 # git clone https://github.com/danielmiessler/SecLists
+
 
 
 echo -e "\n\n\nDone! All tools are set up in ~/tools\n\n"

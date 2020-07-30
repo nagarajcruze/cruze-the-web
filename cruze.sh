@@ -29,16 +29,19 @@ assetfinder --subs-only $domain | tee $dir/asset_subs.txt
 
 #Sublister
 echo "-------------------Sublister Started  ----------------------------------------------"
-python3 ~/tools/Sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
-echo "-------------------Sublister Scan Completed-----------------------------------------"
+python3 ~/tools/sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
 
-cat $dir/asset_subs.txt $dir/subs.txt | sort -u > $dir/subdomains.txt
+echo "------------------Subfinder--------------------------------------------------------"
+subfinder -d $domain --silent -o $dir/subfinder.txt
+
+cat $dir/asset_subs.txt $dir/subs.txt $dir/subfinder.txt| sort -u > $dir/subdomains.txt
 rm $dir/asset_subs.txt
 rm $dir/subs.txt
+rm $dir/subfinder.txt
 
 
 echo "Now aquatone will start to screenshot and some extra recons."
-cat $dir/subdomains.txt | aquatone -chrome-path /snap/bin/chromium -ports xlarge -out $dir/
+cat $dir/subdomains.txt | aquatone -chrome-path /usr/bin/chromium -ports xlarge -out $dir/
 echo "-------------------Aquatone Scan Completed------------------------------------------"
 
 
@@ -54,10 +57,12 @@ rm $dir/nmap_live_ip.txt
 echo "-------------------gau Scan Started--------------------------------------------------"
 gau --subs $domain | tee $dir/gau_urls.txt
 
+echo "-------------------hakrawler Started-------------------------------------------------"
+cat $dir/subdomains.txt | hakrawler -depth 3 -plain | tee $dir/hakrawler.txt
 
 echo "-------------------waybackurls Scan Started------------------------------------------"
 cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
-cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt | sort -u > $dir/waybackurls.txt
+cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
 
 
 echo "-------------------looking for vulnerable endpoints----------------------------------"
@@ -71,7 +76,9 @@ cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
 cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt 
 cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt 
 cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
+cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
 echo "-------------------Gf patters Completed------------------------------------------------"
+
 
 wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
 python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json

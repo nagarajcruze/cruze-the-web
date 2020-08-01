@@ -46,6 +46,7 @@ echo "done Installing Waybackurls"
 echo "Installing gf"
 go get -u github.com/tomnomnom/gf
 sudo ln -s ~/go/bin/gf /usr/bin/
+git clone https://github.com/1ndianl33t/Gf-Patterns
 mkdir ~/.gf
 cp  ~/tools/Gf-Patterns/*.json ~/.gf
 echo "done Installing gf"
@@ -77,6 +78,17 @@ git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
 cd ~/tools/
 echo "done installing sqlmap"
 
+echo "installing hakrawler"
+go get github.com/hakluke/hakrawler
+sudo ln -s ~/go/bin/hakrawler /usr/bin/
+echo "done installing hakrawler"
+
+echo "installing wafwoof"
+git clone https://github.com/EnableSecurity/wafw00f.git
+cd ~/tools/wafw00f/
+python setup.py install
+echo "done installing wafoof"
+
 echo "installing Arjun"
 git clone https://github.com/s0md3v/Arjun.git
 echo "done installing Arjun"
@@ -91,8 +103,9 @@ echo tar xvf gau_1.0.2_linux_amd64.tar.gz
 echo mv gau ~/tools/
 echo sudo ln -s ~/tools/gau /usr/bin
 
+
 echo "if you want download full seclists or download raft folder which is i use mostly."
-# git clone https://github.com/danielmiessler/SecLists
+echo "git clone https://github.com/danielmiessler/SecLists"
 
 
 

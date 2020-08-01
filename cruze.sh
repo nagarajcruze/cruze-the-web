@@ -29,7 +29,7 @@ assetfinder --subs-only $domain | tee $dir/asset_subs.txt
 
 #Sublister
 echo "-------------------Sublister Started  ----------------------------------------------"
-python3 ~/tools/sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
+python3 ~/tools/Sublist3r/Sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
 
 echo "------------------Subfinder--------------------------------------------------------"
 subfinder -d $domain --silent -o $dir/subfinder.txt

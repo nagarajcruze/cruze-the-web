@@ -1,5 +1,8 @@
 #!/bin/bash
 
+domain=""
+dir=""
+
 logo(){
 echo $'\e[1;31m'"
   ____ ____  _   _ __________ 
@@ -9,85 +12,138 @@ echo $'\e[1;31m'"
  \____|_| \_\\\___//____|_____|
                               The Web " $'\e[0m'
 }
+
+initDefaults(){
+  echo $1
+  domain=$1
+  if [ -z "$1" ]; then
+    echo "No argument supplied"
+    echo "Domain Name requried! Ex: ./cruze.sh example.com"
+    exit 1
+  fi
+  dir=$1-$(date '+%Y-%m-%d')
+  dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/_/g | tr A-Z a-z)
+  mkdir -p $dir
+}
+
+assetFinder(){
+  #Assetfinder
+  echo "-------------------Assetfinder Started  -------------------------------------------"
+  assetfinder --subs-only $domain | tee $dir/asset_subs.txt
+}
+
+subLister(){
+  #Sublister
+  echo "-------------------Sublister Started  ----------------------------------------------"
+  python3 ~/tools/Sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
+}
+
+subFinder(){
+  echo "------------------Subfinder--------------------------------------------------------"
+  subfinder -d $domain --silent -o $dir/subfinder.txt
+}
+
+groupSubdomains(){
+  cat $dir/asset_subs.txt $dir/subs.txt $dir/subfinder.txt| sort -u > $dir/subdomains.txt
+  rm $dir/asset_subs.txt
+  rm $dir/subs.txt
+  rm $dir/subfinder.txt
+}
+
+aquaTone(){
+  echo "Now aquatone will start to screenshot and some extra recons."
+  cat $dir/subdomains.txt | aquatone -chrome-path /usr/bin/chromium -ports xlarge -out $dir/
+  echo "-------------------Aquatone Scan Completed------------------------------------------"
+}
+
+liveSubdomains(){
+  # echo "httprobe will check for live_subdomains"
+  cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
+}
+
+nmapScan(){
+  #Nmap scripts
+  echo "-------------------Now Nmap will ping for IP addresses-------------------------------"
+  nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
+  cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
+  rm $dir/nmap_live_ip.txt
+}
+
+pathFinders(){
+  echo "-------------------gau Scan Started--------------------------------------------------"
+  gau --subs $domain | tee $dir/gau_urls.txt
+
+  echo "-------------------hakrawler Started-------------------------------------------------"
+  cat $dir/subdomains.txt | hakrawler -depth 3 -plain | tee $dir/hakrawler.txt
+
+  echo "-------------------waybackurls Scan Started------------------------------------------"
+  cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
+  cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
+}
+
+scanSuspect(){
+  echo "-------------------looking for vulnerable endpoints----------------------------------"
+  mkdir $dir/paramlist
+  cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt
+  cat $dir/waybackurls.txt | gf ssrf > $dir/paramlist/ssrf.txt
+  cat $dir/waybackurls.txt | gf rce > $dir/paramlist/rce.txt
+  cat $dir/waybackurls.txt | gf idor > $dir/paramlist/idor.txt
+  cat $dir/waybackurls.txt | gf sqli > $dir/paramlist/sqli.txt
+  cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
+  cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt
+  cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt
+  cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
+  cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
+  echo "-------------------Gf patters Completed------------------------------------------------"
+}
+
+wafDetect(){
+  wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
+}
+
+corsDetect(){
+  python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
+}
+
+
+end(){
+  echo  "------------------Now don't forget to use the below commands.--------------------------"
+  echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
+
+  echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt"
+
+  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json"
+
+  echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt"
+
+}
+
+# pre
 logo
+initDefaults "$1"
 
-domain=$1
+# subdomain hunt 
+assetFinder
+subLister
+subFinder
+groupSubdomains
+aquaTone
+liveSubdomains
 
-if [ -z "$1" ]; then
-  echo "No argument supplied"
-  echo "Domain Name requried! Ex: ./cruze.sh example.com"
-  exit 1
-fi
+# Port Scan
+nmapScan
 
-dir=$1-$(date '+%Y-%m-%d')
-dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/_/g | tr A-Z a-z)
-mkdir -p $dir
+# Path Trace
+pathFinders
 
-#Assetfinder
-echo "-------------------Assetfinder Started  -------------------------------------------"
-assetfinder --subs-only $domain | tee $dir/asset_subs.txt
+# scan for suspected urls
+scanSuspect
 
-#Sublister
-echo "-------------------Sublister Started  ----------------------------------------------"
-python3 ~/tools/sublist3r/sublist3r.py -v -t 10 -d $domain -o $dir/subs.txt
+# waf
+wafDetect
 
-echo "------------------Subfinder--------------------------------------------------------"
-subfinder -d $domain --silent -o $dir/subfinder.txt
+# CORS
+corsDetect
 
-cat $dir/asset_subs.txt $dir/subs.txt $dir/subfinder.txt| sort -u > $dir/subdomains.txt
-rm $dir/asset_subs.txt
-rm $dir/subs.txt
-rm $dir/subfinder.txt
-
-
-echo "Now aquatone will start to screenshot and some extra recons."
-cat $dir/subdomains.txt | aquatone -chrome-path /usr/bin/chromium -ports xlarge -out $dir/
-echo "-------------------Aquatone Scan Completed------------------------------------------"
-
-
-# echo "httprobe will check for live_subdomains"
-cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
-
-#Nmap scripts
-echo "-------------------Now Nmap will ping for IP addresses-------------------------------"
-nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
-cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
-rm $dir/nmap_live_ip.txt
-
-echo "-------------------gau Scan Started--------------------------------------------------"
-gau --subs $domain | tee $dir/gau_urls.txt
-
-echo "-------------------hakrawler Started-------------------------------------------------"
-cat $dir/subdomains.txt | hakrawler -depth 3 -plain | tee $dir/hakrawler.txt
-
-echo "-------------------waybackurls Scan Started------------------------------------------"
-cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
-cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
-
-
-echo "-------------------looking for vulnerable endpoints----------------------------------"
-mkdir $dir/paramlist
-cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt 
-cat $dir/waybackurls.txt | gf ssrf > $dir/paramlist/ssrf.txt 
-cat $dir/waybackurls.txt | gf rce > $dir/paramlist/rce.txt 
-cat $dir/waybackurls.txt | gf idor > $dir/paramlist/idor.txt 
-cat $dir/waybackurls.txt | gf sqli > $dir/paramlist/sqli.txt 
-cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
-cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt 
-cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt 
-cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
-cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
-echo "-------------------Gf patters Completed------------------------------------------------"
-
-
-wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
-python3 ~/tools/Corsy/corsy.py -i $dir/live_subdomains.txt -o $dir/corsy.json
-
-echo  "------------------Now don't forget to use the below commands.--------------------------"
-echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
-
-echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt"
-
-echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json"
-
-echo "python3 ~/tools/dirsearch/dirsearch.py -L subdomains.txt -e php,asp,aspx,jsp,html,zip,jar  --plain-text-report=dir_results.txt"
+# footer
+end

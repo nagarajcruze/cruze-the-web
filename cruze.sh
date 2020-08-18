@@ -93,7 +93,7 @@ scanSuspect(){
   cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
 
   #this is the worst way!!!
-  ls $dir/paramlist/ > a.txt && cat a.txt | while read endpoints; do echo $endpoints; cat $dir/paramlist/$endpoints; done
+  ls $dir/paramlist/ > $dir/gf-endpoints.txt && cat $dir/gf-endpoints.txt | while read endpoints; do echo $endpoints; cat $dir/paramlist/$endpoints; done
   echo -e "\e[91m-------------------Gf patters Scan Completed------------------------------------------------\e[0m"
 }
 

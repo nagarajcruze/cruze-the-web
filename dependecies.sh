@@ -61,13 +61,6 @@ go get github.com/ffuf/ffuf
 sudo ln -s ~/go/bin/ffuf /usr/bin/
 echo "done installing ffuf"
 
-echo "installing Sublist3r"
-git clone https://github.com/aboul3la/Sublist3r.git
-cd Sublist3r*
-pip install -r requirements.txt
-cd ~/tools/
-echo "done installing Sublist3r"
-
 echo "installing dirsearch"
 git clone https://github.com/maurosoria/dirsearch.git
 cd ~/tools/
@@ -102,6 +95,10 @@ echo https://github.com/lc/gau/releases/
 echo tar xvf gau_1.0.2_linux_amd64.tar.gz
 echo mv gau ~/tools/
 echo sudo ln -s ~/tools/gau /usr/bin
+
+echo "instaling Amass"
+go get -v github.com/OWASP/Amass/v3/...
+sudo ln -s ~/go/bin/amass /usr/bin/
 
 
 echo "if you want download full seclists or download raft folder which is i use mostly."

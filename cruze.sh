@@ -32,12 +32,6 @@ assetFinder(){
   assetfinder --subs-only $domain | tee $dir/asset_subs.txt
 }
 
-subLister(){
-  # sublister
-  echo -e "\e[91m-------------------Sublister Started  ----------------------------------------------\e[0m"
-  python3 ~/tools/Sublist3r/sublist3r.py -t 10 -d $domain -o $dir/subs.txt
-}
-
 subFinder(){
   # subfinder
   echo -e "\e[91m-------------------Subfinder---------------------------------------------------------\e[0m"
@@ -50,31 +44,17 @@ rapiddns(){
 }
 
 groupSubdomains(){
-  cat $dir/asset_subs.txt $dir/subs.txt $dir/subfinder.txt $dir/rapiddns.txt | sort -u > $dir/subdomains.txt
+  cat $dir/asset_subs.txt $dir/subfinder.txt $dir/rapiddns.txt | sort -u > $dir/subdomains.txt
   rm $dir/asset_subs.txt
-  rm $dir/subs.txt
   rm $dir/subfinder.txt
   rm $dir/rapiddns.txt
 }
 
-aquaTone(){
-  # aquatone
-  echo -e "\e[91mNow aquatone will start to screenshot and some extra recons."
-  cat $dir/subdomains.txt | aquatone -chrome-path /usr/bin/chromium -ports xlarge -out $dir/
-  echo -e "\e[91m-------------------Aquatone Scan Completed------------------------------------------\e[0m"
-}
-
 liveSubdomains(){
   # echo "httprobe will check for live_subdomains"
-  cat $dir/subdomains.txt | httprobe -c 50 -t 3000 > $dir/live_subdomains.txt
-}
-
-nmapScan(){
-  # nmap scripts
-  echo -e "\e[91m-------------------Now Nmap will ping for IP addresses-------------------------------\e[0m"
-  nmap -iL $dir/subdomains.txt -Pn -n -sn -oG $dir/nmap_live_ip.txt
-  cat $dir/nmap_live_ip.txt | grep ^Host | cut -d " " -f 2 > $dir/live_ip.txt
-  rm $dir/nmap_live_ip.txt
+  # it will give only https domains and not http
+  echo -e "\e[91m-------------------Live HTTPS Domains-----------------------------------------------------------\e[0m"
+  cat $dir/subdomains.txt | httprobe -c 50 -t 3000 | sed -e 's!http\?://\S*!!g' | sort -u | tee $dir/live_subdomains.txt
 }
 
 pathFinders(){
@@ -86,7 +66,9 @@ pathFinders(){
 
   echo -e "\e[91m-------------------waybackurls Scan Started------------------------------------------\e[0m"
   cat $dir/subdomains.txt | waybackurls | tee $dir/archiveurl.txt
-  cat $dir/aquatone_urls.txt $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
+
+  # Grouping endpoints
+  cat $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
 }
 
 scanSuspect(){
@@ -102,12 +84,15 @@ scanSuspect(){
   cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt
   cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
   cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
+
+  #this is the worst way!!!
+  ls $dir/paramlist/ > a.txt && cat a.txt | while read endpoints; do echo $endpoints; cat $dir/paramlist/$endpoints; done
   echo -e "\e[91m-------------------Gf patters Scan Completed------------------------------------------------\e[0m"
 }
 
 wafDetect(){
   #wafw00f
-  wafw00f -i $dir/subdomains.txt -o $dir/waf.txt
+  wafw00f -i $dir/live_subdomains.txt -o $dir/waf.txt
 }
 
 corsDetect(){
@@ -117,15 +102,15 @@ corsDetect(){
 
 
 end(){
-  echo  "------------------Now don't forget to use the below commands.--------------------------"
-
+  echo  -e "\e[91m------------------Now don't forget to use the below commands.--------------------------\e[0m"
+  echo .
   echo "ffuf -w ~/tools/raft-wordlist/raft-large-directories.txt -u $dir/FUZZ -t 200"
-
+  echo .
   echo "sudo nmap -iL $dir/live_ip.txt -A | tee $dir/nmap_scan.txt"
-
-  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oJ $dir/masscan_output.json"
-
-  echo "python3 ~/tools/dirsearch/dirsearch.py -L $dir/subdomains.txt -e php,asp,aspx,jsp,html,zip  --plain-text-report=dir_results.txt"
+  echo .
+  echo "sudo masscan -iL $dir/live_ip.txt -p 1-65535 --rate 10000 -oL $dir/masscan_output.json"
+  echo .
+  echo "python3 ~/tools/dirsearch/dirsearch.py -L $dir/subdomains.txt -e php,asp,aspx,jsp,html,zip,bak,old,backup,bak_old,js,env,config  --plain-text-report=dir_results.txt"
 
 }
 
@@ -135,15 +120,10 @@ initDefaults "$1"
 
 # subdomain hunt 
 assetFinder
-subLister
 subFinder
 rapiddns
 groupSubdomains
-aquaTone
 liveSubdomains
-
-# port Scan
-nmapScan
 
 # path trace
 pathFinders

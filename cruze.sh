@@ -32,6 +32,12 @@ assetFinder(){
   assetfinder --subs-only $domain | tee $dir/asset_subs.txt
 }
 
+amass(){
+  # amass
+  echo -e "\e[91m-------------------Amass---------------------------------------------------------\e[0m"
+  amass enum -d $domain -active -o amass.txt
+}
+
 subFinder(){
   # subfinder
   echo -e "\e[91m-------------------Subfinder---------------------------------------------------------\e[0m"
@@ -44,10 +50,11 @@ rapiddns(){
 }
 
 groupSubdomains(){
-  cat $dir/asset_subs.txt $dir/subfinder.txt $dir/rapiddns.txt | sort -u > $dir/subdomains.txt
+  cat $dir/asset_subs.txt cat $domain/amass.txt $dir/subfinder.txt $dir/rapiddns.txt | sort -u > $dir/subdomains.txt
   rm $dir/asset_subs.txt
   rm $dir/subfinder.txt
   rm $dir/rapiddns.txt
+  rm $dir/amass.txt
 }
 
 liveSubdomains(){

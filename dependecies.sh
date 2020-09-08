@@ -86,7 +86,7 @@ echo "installing Arjun"
 git clone https://github.com/s0md3v/Arjun.git
 echo "done installing Arjun"
 
-echo "instaling subrute"
+echo "instaling subfinder"
 go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
 sudo ln -s ~/go/bin/subfinder /usr/bin/
 

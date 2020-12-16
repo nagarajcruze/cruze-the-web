@@ -18,14 +18,14 @@ mkdir -p ~/tools
 cd ~/tools
 
 # Install Go
-RUN wget https://golang.org/dl/go1.15.2.linux-amd64.tar.gz -O /tmp/go.tar.gz
-RUN cd /tmp && tar -C /usr/local -xzf go.tar.gz && cd /
-ENV PATH="${PATH}:/usr/local/go/bin:/root/go/bin:~/go/bin"
+wget https://golang.org/dl/go1.15.2.linux-amd64.tar.gz -O /tmp/go.tar.gz
+cd /tmp && tar -C /usr/local -xzf go.tar.gz && cd /
+PATH="${PATH}:/usr/local/go/bin:/root/go/bin:~/go/bin"
 
 # Amass
-RUN wget https://github.com/OWASP/Amass/releases/download/v3.10.3/amass_linux_amd64.zip -O /tmp/amass.zip
-RUN cd /tmp && unzip amass.zip && mv amass_linux_amd64 /tools/amass && cd /
-ENV PATH="${PATH}:~/tools/amass"
+wget https://github.com/OWASP/Amass/releases/download/v3.10.3/amass_linux_amd64.zip -O /tmp/amass.zip
+cd /tmp && unzip amass.zip && mv amass_linux_amd64 /tools/amass && cd /
+PATH="${PATH}:~/tools/amass"
 
 # install aquatone
 echo "Installing Aquatone"

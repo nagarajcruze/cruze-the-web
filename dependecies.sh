@@ -115,9 +115,9 @@ git clone https://github.com/gwen001/github-search.git ~/tools/github-search
 cd ~/tools/github-search && pip3 install -r requirements2.txt && pip3 install -r requirements3.txt && cd ~/
 
 # masscan
-RUN git clone https://github.com/robertdavidgraham/masscan
-RUN cd ~/tools/masscan && make && sudo ln -s ~/tools/masscan/masscan /usr/bin cd ~/
-ENV PATH="${PATH}:/tools/masscan/bin"
+git clone https://github.com/robertdavidgraham/masscan
+cd ~/tools/masscan && make && sudo ln -s ~/tools/masscan/masscan /usr/bin cd ~/
+PATH="${PATH}:/tools/masscan/bin"
 
 # meg
 go get -u github.com/tomnomnom/meg

@@ -136,6 +136,9 @@ cd ~/tools/secretfinder
 pip install -r requirements.txt
 cd ~/
 
+#MassDNS
+sudo apt-get install massdns
+
 echo "if you want download full seclists or download raft folder which is i use mostly."
 echo "git clone https://github.com/danielmiessler/SecLists"
 

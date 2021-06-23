@@ -69,6 +69,18 @@ pathFinders(){
 
   # Grouping endpoints
   cat $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt | sort -u > $dir/waybackurls.txt
+
+  cat $dir/waybackurls.txt | unfurl paths | sort -u > $dir/unf_wrdlst.txt
+
+  cat $dir/unf_wrdlst.txt | python3 ~/tools/sprawl/sprawl.py | sort -u > $dir/spr_wrdlst.txt
+
+  cat $dir/spr_wrdlst.txt | tr "/" "\n" | sort -u > $dir/tr_wrdlst.txt
+
+#  grep -vf $dir/ignore.txt
+
+  cat $dir/tr_wrdlst.txt > $dir/clean_wordlist.txt
+
+  rm $dir/unf_wrdlst.txt && rm $dir/spr_wrdlst.txt && rm $dir/tr_wrdlst.txt
 }
 
 scanSuspect(){

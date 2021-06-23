@@ -87,7 +87,7 @@ echo "done installing dirsearch"
 
 # sqlmap
 echo "installing sqlmap"
-git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev 
+git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git ~/tools/sqlmap-dev
 echo "done installing sqlmap"
 
 # wafw00f
@@ -119,6 +119,7 @@ echo "done installing sprawl"
 # Subfinder
 git clone https://github.com/projectdiscovery/subfinder.git ~/tools/subfinder
 cd ~/tools/subfinder/v2/cmd/subfinder && go build . && sudo ln -s $(pwd)/subfinder /usr/bin/ && cd ~/
+# go get -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder
 
 # github-search
 git clone https://github.com/gwen001/github-search.git ~/tools/github-search

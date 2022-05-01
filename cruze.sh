@@ -217,8 +217,5 @@ wafDetect
 # hunting For JS secrets
 huntJs
 
-# hunting For JS secrets
-huntJs
-
 # footer
 end

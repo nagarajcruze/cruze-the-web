@@ -63,6 +63,12 @@ gitDomains(){
   gitdomains -d $domain -o $dir/$domain.txt
 }
 
+Amass(){
+  # Amass
+  echo -e "\e[91m-------------------Amass Started  -------------------------------------------\e[0m"
+  amass enum -passive -d $domain -o $dir/amass-subs.txt
+}
+
 groupSubdomains(){
   cat $dir/asset_subs.txt $dir/subfinder.txt $dir/rapiddns.txt $dir/amass-subs.txt $dir/crt.txt $dir/$domain.txt | sort -u > $dir/subdomains.txt
   rm $dir/asset_subs.txt
@@ -185,7 +191,7 @@ end(){
 logo
 initDefaults "$1"
 
-# subdomain hunt 
+# subdomain hunt
 assetFinder
 subFinder
 rapiddns
@@ -209,6 +215,9 @@ corsDetect
 
 # waf
 wafDetect
+
+# hunting For JS secrets
+huntJs
 
 # hunting For JS secrets
 huntJs

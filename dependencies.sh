@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "PLEASE, Provide SUDO Password"
+echo "PLEASE, Provide SUDO Password."
 read -p 'This script will only some tools and you have to manually check all the required tools installed or not, continue to installation? y/n : '  -n 1 -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then

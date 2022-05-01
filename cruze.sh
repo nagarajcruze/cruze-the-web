@@ -40,8 +40,6 @@ subFinder(){
 
 rapiddns(){
   echo -e "\e[91m-------------------Rapiddns-----------------------------------------------------------\e[0m"
-  #curl -s "https://rapiddns.io/subdomain/$domain?full=1"| grep -oP '_blank">\K[^<]*' | grep -v http | sort -u | tee $dir/rapiddns.txt
-  # curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | awk '{ print $7}' | grep "</a" | sort -u | cut -b 10- | rev | cut -b 1-4 --complement | rev | tee $dir/rapiddns.txt
   curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | grep -oE '<td>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | tee $dir/rapiddns.txt
 }
 

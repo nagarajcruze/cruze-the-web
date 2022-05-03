@@ -20,156 +20,161 @@ initDefaults(){
     echo -e "\e[91mDomain Name requried! \e[0m Ex: ./cruze.sh example.com"
     exit 1
   fi
-  echo -e "\e[96mThe Target is \e[0m \e[96m$1\e[0m"
+  echo -e "The Target is \e[96m$1\e[0m"
+  echo
   dir=$1-$(date '+%Y-%m-%d')
   dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/_/g | tr A-Z a-z)
   mkdir -p $dir
+  touch $dir/out.txt
+  curl https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt -o $dir/resolvers.txt -s
 }
 
 assetFinder(){
   # assetfinder
-  echo -e "\e[91m-------------------Assetfinder Started-------------------------------------------\e[0m"
-  assetfinder --subs-only $domain | tee $dir/asset_subs.txt
+  echo -e "\e[91m[ Assetfinder Started ]\e[0m"
+  assetfinder --subs-only $domain | sort -u | anew -q $dir/out.txt
 }
 
 subFinder(){
   # subfinder
-  echo -e "\e[91m-------------------Subfinder---------------------------------------------------------\e[0m"
-  subfinder -d $domain --silent -o $dir/subfinder.txt
+  echo -e "\e[91m[ Subfinder Started ]\e[0m"
+  subfinder -d $domain --silent | anew -q $dir/out.txt
 }
 
 rapiddns(){
-  echo -e "\e[91m-------------------Rapiddns-----------------------------------------------------------\e[0m"
-  curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | grep -oE '<td>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | tee $dir/rapiddns.txt
+  echo -e "\e[91m[ Rapiddns Started ]\e[0m"
+  curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | grep -oE '<td>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | anew -q $dir/out.txt
 }
 
 Amass(){
   # Amass
-  echo -e "\e[91m-------------------Amass Started-------------------------------------------\e[0m"
-  amass enum -passive -d $domain -o $dir/amass-subs.txt
+  echo -e "\e[91m[ Amass Started ]\e[0m"
+  amass enum -passive -d $domain -silent | anew -q $dir/out.txt
 }
-
 
 Crt.sh(){
   #Crt.sh
-  echo -e "\e[91m-------------------Crt.sh Started-------------------------------------------\e[0m"
-  curl https://crt.sh/?q=$domain -q | grep -oE '<TD>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | grep $domain | tee > $dir/crt.txt
+  echo -e "\e[91m[ Crt.sh Started ]\e[0m"
+  curl https://crt.sh/?q=$domain -s | grep -oE '<TD>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | grep $domain | anew -q $dir/out.txt
 }
 
 gitDomains(){
-  echo -e "\e[91m-------------------GitHub Subdomains Started-------------------------------------------\e[0m"
-  gitdomains -d $domain -o $dir/$domain.txt
+  echo -e "\e[91m[ GitHub Subdomains Started ]\e[0m"
+  gitdomains -d $domain -raw | anew -q $dir/out.txt
+  rm $domain.txt
 }
 
-Amass(){
-  # Amass
-  echo -e "\e[91m-------------------Amass Started  -------------------------------------------\e[0m"
-  amass enum -passive -d $domain -o $dir/amass-subs.txt
+findDomains(){
+  echo -e "\e[91m[ FindDomains Started ]\e[0m"
+  findomain-linux -t $domain -q | sort -u | anew -q $dir/out.txt
 }
+
+gauDomains(){
+  echo -e "\e[91m[ GauPlus Started ]\e[0m"
+  gau -subs $domain | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|eot|ttf|woff|JPG|JPEG|PNG|GIF|SVG|CSS)$" | unfurl -u domains | anew -q $dir/out.txt
+}
+
+wayBackUrl(){
+  echo -e "\e[91m[ WayBackURLs Started ]\e[0m"
+waybackurls $domain | unfurl -u domains | sort -u | anew -q $dir/out.txt
+}
+
+bufferOver(){
+  echo -e "\e[91m[ bufferOver Started ]\e[0m"
+  curl "https://dns.bufferover.run/dns?q=$domain" -s | jq -r '.FDNS_A'[],'.RDNS'[]  | cut -d ',' -f2 | grep -F ".$domain" | sort -u | anew -q $dir/out.txt
+
+}
+
 
 groupSubdomains(){
-  cat $dir/asset_subs.txt $dir/subfinder.txt $dir/rapiddns.txt $dir/amass-subs.txt $dir/crt.txt $dir/$domain.txt | sort -u > $dir/subdomains.txt
-  rm $dir/asset_subs.txt
-  rm $dir/subfinder.txt
-  rm $dir/rapiddns.txt
-  rm $dir/amass-subs.txt
-  rm $dir/crt.txt
-  rm $dir/$domain.txt
+  echo -e "\e[91m[ Total Subdomains Found ]\e[0m"
+  touch $dir/subDomains.txt
+  cat $dir/out.txt | sort -u | tee $dir/subDomains.txt
+  rm $dir/out.txt
+}
+
+pureResolve(){
+ echo -e "\e[91m[ DNS Resolved SubDomains ]\e[0m"
+ cat $dir/subDomains.txt | puredns resolve -w $dir/resolvedSubdomains.txt -r $dir/resolvers.txt -q
 }
 
 passiveBrute(){
- wget https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt -O $dir/resolvers.txt
- echo -e "\e[91m-------------------Passive Bruteforce is in Progress-----------------------------------------------------------\e[0m"
- cat $dir/subdomains.txt | dnsgen - | massdns -r $dir/resolvers.txt -o S -q | awk '{print $1}' | rev | cut -b 1 --complement | rev | anew $dir/subdomains.txt
+
+ echo -e "\e[91m[ Passive Bruteforce is in Progress ]\e[0m"
+ cat $dir/subDomains.txt | dnsgen - | massdns -r $dir/resolvers.txt -o S -q | awk '{print $1}' | rev | cut -b 1 --complement | rev | anew $dir/BruteSubDomains.txt
 }
 
 liveSubdomains(){
-  echo -e "\e[91m-----------------------List of SubDomains Found---------------------------\e[0m"
-  # it will give only https domains and not http
-  cat $dir/subdomains.txt | httprobe -c 30 -t 1500 | tee $dir/all_live_subdomains.txt
-  echo -e "\e[91m-----------------------live_https_subdomains---------------------------\e[0m"
-  cat $dir/all_live_subdomains.txt | sed -e 's!http\?://\S*!!g' | sort -u | tee $dir/live_https_subdomains.txt
+  echo -e "\e[91m[ List of Live SubDomains Found ]\e[0m"
+  cat $dir/resolvedSubdomains.txt | httprobe -c 30 -t 1500 | tee $dir/liveSubdomains.txt
 }
 
 pathFinders(){
-  gau --subs $domain > $dir/gau_urls.txt
-  echo -e "\e[91m-------------------Gau Scan Completed--------------------------------------------------\e[0m"
+  touch $dir/tempURLs.txt
+  gau --subs $domain | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|eot|ttf|woff|JPG|JPEG|PNG|GIF|SVG|CSS)$" | sort -u | anew -q $dir/tempURLs.txt
+  echo -e "\e[91m[ Gau Scan Completed ]\e[0m"
 
-  cat $dir/subdomains.txt | hakrawler -depth 3 -plain > $dir/hakrawler.txt
-  echo -e "\e[91m-------------------Hakrawler Completed-------------------------------------------------\e[0m"
+  cat $dir/liveSubdomains.txt | hakrawler -d 3 -subs | sort -u | anew -q $dir/tempURLs.txt
+  echo -e "\e[91m[ Hakrawler Completed ]\e[0m"
 
-  cat $dir/subdomains.txt | waybackurls > $dir/archiveurl.txt
-  echo -e "\e[91m-------------------Waybackurls Scan Completed------------------------------------------\e[0m"
+  cat $dir/resolvedSubdomains.txt | waybackurls | sort -u | anew -q $dir/tempURLs.txt
+  echo -e "\e[91m[ Waybackurls Scan Completed ]\e[0m"
 
-  gospider -S all_live_subdomains.txt -t 2 -d 0 --subs --sitemap -a -w -r -q  | sed -E 's/(\[.*\] - )?(\[.*\] - )//g' | sort -u > $dir/gospiderurl.txt
-  echo -e "\e[91m-------------------GoSpider Scan Completed---------------------------------------------\e[0m"
+  gospider -S $dir/liveSubdomains.txt -t 2 -d 0 --subs --sitemap -a -w -r -q  | sed -E 's/(\[.*\] - )?(\[.*\] - )//g' | sort -u | anew -q $dir/tempURLs.txt
+  echo -e "\e[91m[ GoSpider Scan Completed ]\e[0m"
 
   # Grouping endpoints
-  cat $dir/gau_urls.txt $dir/archiveurl.txt $dir/hakrawler.txt $dir/gospiderurl.txt | sort -u | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|JPG|JPEG|PNG|GIF|SVG|CSS)$" > $dir/waybackurls.txt
-  echo "Total Count of WayBack URLs Found : " && cat $dir/waybackurls.txt | wc -l
+  cat $dir/tempURLs.txt | sort -u | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|eot|ttf|woff|JPG|JPEG|PNG|GIF|SVG|CSS)$" | anew -q $dir/waybackURLs.txt
+  rm $dir/tempURLs.txt
+  echo "Total Count of WayBack URLs Found : " && cat $dir/waybackURLs.txt | wc -l
 
-# cp ~/tools/project/ignore.txt $dir/
-  echo -e "\e[91m--------------------generating wordlist with target------------------------------------\e[0m"
-  cat $dir/waybackurls.txt | unfurl paths | sort -u > $dir/unf_wrdlst.txt
-
-  cat $dir/unf_wrdlst.txt | python3 ~/tools/sprawl/sprawl.py | sort -u > $dir/spr_wrdlst.txt
-
-  cat $dir/spr_wrdlst.txt | tr "/" "\n" | sort -u > $dir/tr_wrdlst.txt
-
-#  grep -vf $dir/ignore.txt
-
-  cat $dir/tr_wrdlst.txt > $dir/clean_wordlist.txt
-
-  rm $dir/unf_wrdlst.txt && rm $dir/spr_wrdlst.txt && rm $dir/tr_wrdlst.txt && rm $dir/gau_urls.txt && rm $dir/hakrawler.txt && rm $dir/archiveurl.txt && rm $dir/gospiderurl.txt
+  # cp ~/tools/project/ignore.txt $dir/
+  echo -e "\e[91m[ Generating Wordlist with Target ]\e[0m"
+  cat $dir/waybackURLs.txt | unfurl paths | sort -u | python3 ~/tools/sprawl/sprawl.py | tr "/" "\n" > $dir/domainWordlist.txt
 }
 
 scanSuspect(){
-  echo -e "\e[91m-------------------looking for vulnerable endpoints----------------------------------\e[0m"
+  echo -e "\e[91m[ Looking for Vulnerable Endpoints ]\e[0m"
   mkdir $dir/paramlist
-  cat $dir/waybackurls.txt | gf redirect > $dir/paramlist/redirect.txt
-  cat $dir/waybackurls.txt | gf ssrf > $dir/paramlist/ssrf.txt
-  cat $dir/waybackurls.txt | gf rce > $dir/paramlist/rce.txt
-  cat $dir/waybackurls.txt | gf idor > $dir/paramlist/idor.txt
-  cat $dir/waybackurls.txt | gf sqli > $dir/paramlist/sqli.txt
-  cat $dir/waybackurls.txt | gf lfi > $dir/paramlist/lfi.txt
-  cat $dir/waybackurls.txt | gf ssti > $dir/paramlist/ssti.txt
-  cat $dir/waybackurls.txt | gf debug_logic > $dir/paramlist/debug_logic.txt
-  cat $dir/waybackurls.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
-  cat $dir/waybackurls.txt | grep "=" | tee $dir/domainParam.txt
+  cat $dir/waybackURLs.txt | gf redirect > $dir/paramlist/redirect.txt
+  cat $dir/waybackURLs.txt | gf ssrf > $dir/paramlist/ssrf.txt
+  cat $dir/waybackURLs.txt | gf rce > $dir/paramlist/rce.txt
+  cat $dir/waybackURLs.txt | gf idor > $dir/paramlist/idor.txt
+  cat $dir/waybackURLs.txt | gf sqli > $dir/paramlist/sqli.txt
+  cat $dir/waybackURLs.txt | gf lfi > $dir/paramlist/lfi.txt
+  cat $dir/waybackURLs.txt | gf ssti > $dir/paramlist/ssti.txt
+  cat $dir/waybackURLs.txt | gf debug_logic > $dir/paramlist/debug_logic.txt
+  cat $dir/waybackURLs.txt | gf interestingsubs > $dir/paramlist/interestingsubs.txt
+  cat $dir/waybackURLs.txt | grep "=" | tee $dir/domainParam.txt
 
   #this is the worst way!!!
   ls $dir/paramlist/ > $dir/vulnerableEndpoints.txt && cat $dir/vulnerableEndpoints.txt | while read endpoints; do echo $endpoints; cat $dir/paramlist/$endpoints; done
-  echo -e "\e[91m-------------------Gf patters Scan Completed------------------------------------------------\e[0m"
+  rm $dir/vulnerableEndpoints.txt
+  echo -e "\e[91m[ Gf patters Scan Completed ]\e[0m"
 }
 
 wafDetect(){
   #wafw00f
-  wafw00f -i $dir/live_https_subdomains.txt -o $dir/waf.txt
+  wafw00f -i $dir/liveSubdomains.txt -o $dir/waf.txt
 }
 
 corsDetect(){
   #corsy
-  python3 ~/tools/Corsy/corsy.py -i $dir/live_https_subdomains.txt -o $dir/corsy.json
+  python3 ~/tools/Corsy/corsy.py -i $dir/liveSubdomains.txt -o $dir/corsy.json
 }
 
 huntJs(){
-echo -e "\e[91m------------------Hunting ON Js Files Started--------------------------\e[0m"
-Temp=$domain-secrets
-mkdir $dir/$Temp
+echo -e "\e[91m[ Hunting ON Js Files Started ]\e[0m"
 
-cat $dir/waybackurls.txt | grep -E "[^\\s]+(.*?)\\.(js|JS)$" | sort -u | sed -E 's/(\[.*\] - )?(\[.*\] - )//g' > $dir/js.txt
+cat $dir/waybackURLs.txt | grep -E "[^\\s]+(.*?)\\.(js|JS)$" | sort -u | sed -E 's/(\[.*\] - )?(\[.*\] - )//g' | anew -q $dir/all-js.txt
 
-cat $dir/all_live_subdomains.txt | getJS --complete --resolve | grep -v google | sort -u > $dir/getjs.txt
+cat $dir/liveSubdomains.txt | getJS --complete --resolve | grep -v google | sort -u | anew -q $dir/all-js.txt
 
-cat $dir/js.txt $dir/getjs.txt | sort -u | tee $dir/all-js.txt
+echo -e "\e[91m[ Downloading Collected JS Files ]\e[0m"
+  cat $dir/all-js.txt | sort -u | xargs curl -s > $dir/downloadedJS.txt
 
-rm $dir/js.txt && rm $dir/getjs.txt
-
-echo -e "\e[91m------------Downloading Collected JS Files------------\e[0m"
-cat $dir/all-js.txt | sort -u | xargs wget -nv -P $dir/$Temp
-
-echo -e "\e[91m------------CHECK FOR INFORMATIONS------------\e[0m"
-python3 ~/tools/SecretFinder/SecretFinder.py -i "$dir/$Temp/*" -o cli | grep -v "URL" | tee $dir/secretFinder_out.txt
+echo -e "\e[91m[ Secret Finder Started ]\e[0m"
+python3 ~/tools/SecretFinder/SecretFinder.py -i "$dir/downloadedJS.txt" -o cli | grep -v "URL" | tee $dir/secretFinder_out.txt
 #add "-c 'key:value' " ---> "this is cookie"
 }
 
@@ -194,11 +199,17 @@ assetFinder
 subFinder
 rapiddns
 Amass
-Crt.sh 
+Crt.sh
 gitDomains
+findDomains
+gauDomains
+wayBackUrl
+bufferOver
+
 
 # Process Subdomains
 groupSubdomains
+pureResolve
 # passiveBrute
 liveSubdomains
 
@@ -219,3 +230,17 @@ huntJs
 
 # footer
 end
+
+
+cat subdomains.txt | rev | cut -d '.' -f 3,2,1 | rev | sort | uniq -c | sort -nr | grep -v '1 ' | head -n 10
+
+  cat subdomains.txt | rev | cut -d '.' -f 4,3,2,1 | rev | sort | uniq -c | sort -nr | grep -v '1 ' | head -n 10
+
+
+
+  | sed -e 's/^[[:space:]]*//' | cut -d ' ' -f 2);do 
+
+
+for sub in $( ( cat subdomains.txt | rev | cut -d '.' -f 3,2,1 | rev | sort | uniq -c | sort -nr | grep -v '1 ' | head -n 10 && cat subdomains.txt | rev | cut -d '.' -f 4,3,2,1 | rev | sort | uniq -c | sort -nr | grep -v '1 ' | head -n 10 ) | sed -e 's/^[[:space:]]*//' | cut -d ' ' -f 2);do 
+    assetfinder --subs-only example.com | anew 
+done

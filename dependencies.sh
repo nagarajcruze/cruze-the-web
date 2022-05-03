@@ -97,6 +97,12 @@ mkdir ~/.gf
 cp  ~/tools/Gf-Patterns/*.json ~/.gf
 echo "done Installing gf"
 
+# gauplus
+go install github.com/bp0lr/gauplus@latest
+
+# CGBoal
+go install github.com/cgboal/sonarsearch/cmd/crobat@install
+
 # dirsearch
 echo "installing dirsearch"
 git clone https://github.com/maurosoria/dirsearch.git ~/tools/dirsearch
@@ -147,6 +153,11 @@ cd ~/tools/secretfinder && pip install -r requirements.txt && cd ~/
 git clone https://github.com/blechschmidt/massdns.git ~/tools/massdns
 cd ~/tools/massdns && make
 sudo ln -s ~/tools/massdns/bin/massdns /usr/bin
+
+#Find Domain
+wget https://github.com/findomain/findomain/releases/latest/download/findomain-linux -o ~/tools/findomain-linux
+chmod +x ~/tools/findomain-linux
+sudo ln -s ~/tools/findomain-linux /usr/bin
 
 echo "if you want download full seclists or download raft folder which is i use mostly."
 echo "git clone https://github.com/danielmiessler/SecLists"

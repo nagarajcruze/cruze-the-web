@@ -25,72 +25,70 @@ initDefaults(){
   dir=$1-$(date '+%Y-%m-%d')
   dir=$(echo "$dir" | sed -r s/[^a-zA-Z0-9]+/_/g | tr A-Z a-z)
   mkdir -p $dir
-  touch $dir/out.txt
+  touch $dir/subDomains.txt
   curl https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt -o $dir/resolvers.txt -s
 }
 
 assetFinder(){
   # assetfinder
   echo -e "\e[91m[ Assetfinder Started ]\e[0m"
-  assetfinder --subs-only $domain | sort -u | anew -q $dir/out.txt
+  assetfinder --subs-only $domain | sort -u | anew -q $dir/subDomains.txt
 }
 
 subFinder(){
   # subfinder
   echo -e "\e[91m[ Subfinder Started ]\e[0m"
-  subfinder -d $domain --silent | anew -q $dir/out.txt
+  subfinder -d $domain --silent | anew -q $dir/subDomains.txt
 }
 
 rapiddns(){
   echo -e "\e[91m[ Rapiddns Started ]\e[0m"
-  curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | grep -oE '<td>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | anew -q $dir/out.txt
+  curl -s "https://rapiddns.io/subdomain/$domain?full=1&down=1#result" | grep -oE '<td>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | anew -q $dir/subDomains.txt
 }
 
 Amass(){
   # Amass
   echo -e "\e[91m[ Amass Started ]\e[0m"
-  amass enum -passive -d $domain -silent | anew -q $dir/out.txt
+  amass enum -passive -d $domain -silent | anew -q $dir/subDomains.txt
 }
 
 Crt.sh(){
   #Crt.sh
   echo -e "\e[91m[ Crt.sh Started ]\e[0m"
-  curl https://crt.sh/?q=$domain -s | grep -oE '<TD>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | grep $domain | anew -q $dir/out.txt
+  curl https://crt.sh/?q=$domain -s | grep -oE '<TD>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)' | sort -u | cut -b 5- | grep $domain | anew -q $dir/subDomains.txt
 }
 
 gitDomains(){
   echo -e "\e[91m[ GitHub Subdomains Started ]\e[0m"
-  gitdomains -d $domain -raw | anew -q $dir/out.txt
+  gitdomains -d $domain -raw | anew -q $dir/subDomains.txt
   rm $domain.txt
 }
 
 findDomains(){
   echo -e "\e[91m[ FindDomains Started ]\e[0m"
-  findomain-linux -t $domain -q | sort -u | anew -q $dir/out.txt
+  findomain-linux -t $domain -q | sort -u | anew -q $dir/subDomains.txt
 }
 
 gauDomains(){
   echo -e "\e[91m[ GauPlus Started ]\e[0m"
-  gau -subs $domain | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|eot|ttf|woff|JPG|JPEG|PNG|GIF|SVG|CSS)$" | unfurl -u domains | anew -q $dir/out.txt
+  gau -subs $domain | grep -vE "[^\\s]+(.*?)\\.(jpg|jpeg|png|gif|svg|css|eot|ttf|woff|JPG|JPEG|PNG|GIF|SVG|CSS)$" | unfurl -u domains | anew -q $dir/subDomains.txt
 }
 
 wayBackUrl(){
   echo -e "\e[91m[ WayBackURLs Started ]\e[0m"
-waybackurls $domain | unfurl -u domains | sort -u | anew -q $dir/out.txt
+waybackurls $domain | unfurl -u domains | sort -u | anew -q $dir/subDomains.txt
 }
 
 bufferOver(){
   echo -e "\e[91m[ bufferOver Started ]\e[0m"
-  curl "https://dns.bufferover.run/dns?q=$domain" -s | jq -r '.FDNS_A'[],'.RDNS'[]  | cut -d ',' -f2 | grep -F ".$domain" | sort -u | anew -q $dir/out.txt
+  curl "https://dns.bufferover.run/dns?q=$domain" -s | jq -r '.FDNS_A'[],'.RDNS'[]  | cut -d ',' -f2 | grep -F ".$domain" | sort -u | anew -q $dir/subDomains.txt
 
 }
 
 
 groupSubdomains(){
   echo -e "\e[91m[ Total Subdomains Found ]\e[0m"
-  touch $dir/subDomains.txt
-  cat $dir/out.txt | sort -u | tee $dir/subDomains.txt
-  rm $dir/out.txt
+  sort -u  $dir/subDomains.txt
 }
 
 pureResolve(){

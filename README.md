@@ -10,3 +10,4 @@
 - ./cruze.sh example.com
 - Use only wildcard domains **\*.example.com** and not this **www.example.com**
 
+
